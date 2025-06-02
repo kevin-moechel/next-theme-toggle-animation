@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 export function ThemeToggle() {
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
-
     const buttonRef = useRef<HTMLButtonElement>(null);
 
     // Ensure the component is mounted before rendering to avoid hydration mismatch
@@ -22,34 +21,36 @@ export function ThemeToggle() {
 
     const isDark = theme === "dark";
     const toggleTheme = async (e: React.MouseEvent) => {
-        if (document.startViewTransition) {
-            if (!buttonRef.current) {
-                return;
-            }
-            await document.startViewTransition(() => {
-                console.log("startViewTransition");
-                setTheme(isDark ? "light" : "dark");
-            }).ready;
+        const skipAnimation =
+            !document.startViewTransition &&
+            (window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+                !buttonRef.current);
 
-            const { clientX, clientY } = e;
-
-            document.documentElement.animate(
-                {
-                    clipPath: [
-                        `circle(0% at ${clientX}px ${clientY}px)`,
-                        `circle(200% at ${clientX}px ${clientY}px)`,
-                    ],
-                },
-                {
-                    duration: 1000,
-                    easing: "ease-in-out",
-                    pseudoElement: "::view-transition-new(root)",
-                }
-            );
-        } else {
+        if (skipAnimation) {
             setTheme(isDark ? "light" : "dark");
+            return;
         }
-        console.log("outside transition");
+
+        await document.startViewTransition(() => {
+            console.log("startViewTransition");
+            setTheme(isDark ? "light" : "dark");
+        }).ready;
+
+        const { clientX, clientY } = e;
+
+        document.documentElement.animate(
+            {
+                clipPath: [
+                    `circle(0% at ${clientX}px ${clientY}px)`,
+                    `circle(200% at ${clientX}px ${clientY}px)`,
+                ],
+            },
+            {
+                duration: 1000,
+                easing: "ease-in-out",
+                pseudoElement: "::view-transition-new(root)",
+            }
+        );
     };
 
     return (
