@@ -21,7 +21,7 @@ export function ThemeToggle() {
     }
 
     const isDark = theme === "dark";
-    const toggleTheme = async () => {
+    const toggleTheme = async (e: React.MouseEvent) => {
         if (document.startViewTransition) {
             if (!buttonRef.current) {
                 return;
@@ -31,13 +31,13 @@ export function ThemeToggle() {
                 setTheme(isDark ? "light" : "dark");
             }).ready;
 
-            const { top, left } = buttonRef.current.getBoundingClientRect();
+            const { clientX, clientY } = e;
 
             document.documentElement.animate(
                 {
                     clipPath: [
-                        `circle(0% at ${left}px ${top}px)`,
-                        `circle(300% at ${left}px ${top}px)`,
+                        `circle(0% at ${clientX}px ${clientY}px)`,
+                        `circle(200% at ${clientX}px ${clientY}px)`,
                     ],
                 },
                 {
