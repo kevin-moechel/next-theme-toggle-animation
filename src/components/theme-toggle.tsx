@@ -1,14 +1,14 @@
 "use client";
 
 import { Loader2, Moon, Sun } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
+import { prefersReducedMotion } from "@/lib/reduced-motion";
 
 export function ThemeToggle() {
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
-    const buttonRef = useRef<HTMLButtonElement>(null);
 
     // Ensure the component is mounted before rendering to avoid hydration mismatch
     useEffect(() => {
@@ -22,9 +22,8 @@ export function ThemeToggle() {
     const isDark = theme === "dark";
     const toggleTheme = async (e: React.MouseEvent) => {
         const skipAnimation =
-            !document.startViewTransition &&
-            (window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
-                !buttonRef.current);
+            !document.startViewTransition || // No support for view transitions
+            prefersReducedMotion(); // User has reduced motion preference
 
         if (skipAnimation) {
             setTheme(isDark ? "light" : "dark");
@@ -58,7 +57,6 @@ export function ThemeToggle() {
             className="rounded-full"
             variant="outline"
             size="icon"
-            ref={buttonRef}
             onClick={toggleTheme}
         >
             <Sun className={`${!isDark && "hidden"}`} />
