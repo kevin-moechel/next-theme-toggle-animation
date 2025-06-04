@@ -16,6 +16,8 @@ export function ThemeToggle() {
     }, []);
 
     if (!mounted) {
+        // Render a placeholder while the component is not mounted to avoid
+        // layout shift
         return <ThemeToggleSkeleton />;
     }
 
@@ -29,6 +31,11 @@ export function ThemeToggle() {
             setTheme(isDark ? "light" : "dark");
             return;
         }
+
+        // This is a hack to prevent the default view transition animation
+        // I hate to do it, but it's the only way to prevent the default animation
+        // from being triggered.
+        injectViewTransitionOverride();
 
         await document.startViewTransition(() => {
             console.log("startViewTransition");
@@ -45,11 +52,18 @@ export function ThemeToggle() {
                 ],
             },
             {
-                duration: 1000,
+                duration: themeToggleTransitionDuration,
                 easing: "ease-in-out",
                 pseudoElement: "::view-transition-new(root)",
             }
         );
+
+        // Remove the view transition override after the transition is complete
+        // We add a small delay to ensure the transition is complete.
+        // Otherwise you'll get a funky UI behaviour
+        setTimeout(() => {
+            removeViewTransitionOverride();
+        }, themeToggleTransitionDuration + 100);
     };
 
     return (
@@ -75,4 +89,25 @@ function ThemeToggleSkeleton() {
             <span className="sr-only">Theme toggle placeholder</span>
         </Button>
     );
+}
+
+const themeToggleTransitionDuration = 1000;
+const viewTransitionOverrideId = "theme-toggle-view-transition-override";
+
+function injectViewTransitionOverride() {
+    const style = document.createElement("style");
+    style.id = viewTransitionOverrideId;
+    style.textContent = `
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation: none !important;
+            mix-blend-mode: normal !important;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function removeViewTransitionOverride() {
+    const style = document.getElementById(viewTransitionOverrideId);
+    if (style) style.remove();
 }
